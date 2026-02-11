@@ -2,9 +2,44 @@ version: "3.9"
 
 services:
 
+  backend:
+    image: fallmodo/diabete-backend:1.0.0
+    ports:
+      - "8000:8000"
+    networks:
+      - backend_net
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+
+  frontend:
+    image: fallmodo/diabete-frontend:1.0.0
+    ports:
+      - "3000:80"
+    networks:
+      - frontend_net
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: any
+
   postgres:
     image: postgres:16-alpine
-    env_file: .env
+    environment:
+      POSTGRES_DB: diabetes_db
+      POSTGRES_USER: diabetes_user
+      POSTGRES_PASSWORD: diabetes_pass
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -14,8 +49,6 @@ services:
       placement:
         constraints:
           - node.role == manager
-      restart_policy:
-        condition: on-failure
 
   redis:
     image: redis:7-alpine
@@ -23,51 +56,23 @@ services:
       - backend_net
     deploy:
       replicas: 1
-      restart_policy:
-        condition: on-failure
 
-  backend:
-    image: diabete-backend:1.0.0
-    env_file: .env
-    environment:
-      POSTGRES_HOST: postgres
+  visualizer:
+    image: dockersamples/visualizer
     ports:
-      - "8000:8000"
-    networks:
-      - backend_net
-      - frontend_net
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
-      replicas: 3
-      restart_policy:
-        condition: on-failure
-      update_config:
-        parallelism: 1
-        delay: 10s
-
-  frontend:
-    image: diabete-frontend:1.0.0
-    ports:
-      - "3000:80"
-    networks:
-      - frontend_net
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-
-  pgadmin:
-    image: dpage/pgadmin4:6.20
-    env_file: .env
-    ports:
-      - "5050:80"
-    networks:
-      - backend_net
-    deploy:
-      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
 
 volumes:
   postgres_data:
 
 networks:
-  frontend_net:
   backend_net:
+    driver: overlay
+  frontend_net:
+    driver: overlay
