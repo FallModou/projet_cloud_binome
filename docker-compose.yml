@@ -1,0 +1,135 @@
+
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  backend:
+    build:
+      context: ./diabete-backend
+      dockerfile: Dockerfile
+    image: diabete-backend:1.0.0
+    container_name: diabete-api
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT}:8000"
+    volumes:
+      - model_data:/app/model
+    networks:
+      - backend_net
+      - frontend_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
+
+  frontend:
+    build:
+      context: ./diabetes-frontend
+      dockerfile: Dockerfile
+    image: diabete-frontend:1.0.0
+    container_name: diabete-ui
+    restart: always
+    depends_on:
+      - backend 
+      #backend:
+      #  condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT}:80"
+    networks:
+      - frontend_net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+
+  pgadmin:
+    image: dpage/pgadmin4:6.20
+    container_name: pgadmin
+    restart: always
+    env_file:
+      - .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: modoufall.8454@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend_net
+
+# ======================
+# Volumes persistants
+# ======================
+volumes:
+  postgres_data:
+  model_data:
+
+# ======================
+# Réseaux isolés
+# ======================
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
