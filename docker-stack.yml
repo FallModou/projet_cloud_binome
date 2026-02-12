@@ -2,38 +2,65 @@ version: "3.9"
 
 services:
 
-  backend:
-    image: fallmodo/diabete-backend:1.0.0
+  # ================================
+  # NGINX REVERSE PROXY
+  # ================================
+  nginx:
+    image: nginx:alpine
     ports:
-      - "8000:8000"
-    networks:
-      - backend_net
+      - "80:80"
+    configs:
+      - source: nginx_conf
+        target: /etc/nginx/nginx.conf
     deploy:
-      replicas: 3
       placement:
         constraints:
-          - node.role == worker
+          - node.role == manager
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - frontend_net
+      - backend_net
+
+  # ================================
+  # FRONTEND
+  # ================================
+  frontend:
+    image: fallmodo/diabete-frontend:1.0.0
+    deploy:
+      replicas: 2
       restart_policy:
         condition: on-failure
       update_config:
         parallelism: 1
         delay: 10s
-        order: start-first
-
-  frontend:
-    image: fallmodo/diabete-frontend:1.0.0
-    ports:
-      - "3000:80"
     networks:
       - frontend_net
+
+  # ================================
+  # BACKEND
+  # ================================
+  backend:
+    image: fallmodo/diabete-backend:1.0.0
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: diabetes_db
+      POSTGRES_USER: diabetes_user
+      POSTGRES_PASSWORD: diabetes_pass
     deploy:
       replicas: 2
-      placement:
-        constraints:
-          - node.role == worker
       restart_policy:
-        condition: any
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+    networks:
+      - backend_net
 
+  # ================================
+  # POSTGRES
+  # ================================
   postgres:
     image: postgres:16-alpine
     environment:
@@ -42,37 +69,45 @@ services:
       POSTGRES_PASSWORD: diabetes_pass
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - backend_net
     deploy:
-      replicas: 1
       placement:
         constraints:
           - node.role == manager
+      restart_policy:
+        condition: on-failure
+    networks:
+      - backend_net
 
+  # ================================
+  # REDIS
+  # ================================
   redis:
     image: redis:7-alpine
+    deploy:
+      restart_policy:
+        condition: on-failure
     networks:
       - backend_net
-    deploy:
-      replicas: 1
 
-  visualizer:
-    image: dockersamples/visualizer
-    ports:
-      - "8080:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
 
+# ================================
+# CONFIGS
+# ================================
+configs:
+  nginx_conf:
+    file: swarm-nginx/nginx.conf
+
+# ================================
+# VOLUMES
+# ================================
 volumes:
   postgres_data:
 
+# ================================
+# NETWORKS
+# ================================
 networks:
-  backend_net:
-    driver: overlay
   frontend_net:
+    driver: overlay
+  backend_net:
     driver: overlay
