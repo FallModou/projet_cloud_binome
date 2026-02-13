@@ -29,7 +29,7 @@ function App() {
     setLoading(true);
     setPrediction(null);
     try {
-      const response = await fetch("/api/predict", {
+      const response = await fetch("http://backend:8000/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
