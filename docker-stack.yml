@@ -44,7 +44,7 @@ services:
   # BACKEND
   # ================================
   backend:
-    image: 192.168.1.18:5000/diabete-backend:1.0.0
+    image: fallmodo/diabete-backend:1.0.0
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_DB: diabetes_db
