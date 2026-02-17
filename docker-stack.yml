@@ -23,6 +23,8 @@ services:
       - frontend_net
       - backend_net
 
+
+
   # ================================
   # FRONTEND
   # ================================
@@ -42,14 +44,14 @@ services:
   # BACKEND
   # ================================
   backend:
-    image: 169.254.240.100:5000/diabete-backend:1.0.0
+    image: 192.168.1.18:5000/diabete-backend:1.0.0
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_DB: diabetes_db
       POSTGRES_USER: diabetes_user
       POSTGRES_PASSWORD: diabetes_pass
     deploy:
-      replicas: 2
+      replicas: 3
       restart_policy:
         condition: on-failure
       update_config:
@@ -88,6 +90,26 @@ services:
         condition: on-failure
     networks:
       - backend_net
+
+
+# ================================
+# VISUALIZER
+# ================================
+  visualizer:
+     image: dockersamples/visualizer:latest
+     ports:
+       - "8089:8080"
+     volumes:
+       - /var/run/docker.sock:/var/run/docker.sock
+     deploy:
+       placement:
+         constraints:
+           - node.role == manager
+       replicas: 1
+       restart_policy:
+         condition: any
+
+
 
 
 # ================================
