@@ -31,6 +31,6 @@ jobs:
       - name: Push Frontend
         run: docker push fallmodo/diabete-frontend:latest
 
-    - name: Deploy to Kubernetes
-      run: kubernetes apply -f k8s/
+      - name: Deploy to Kubernetes
+        run: kubernetes apply -f k8s/
           
