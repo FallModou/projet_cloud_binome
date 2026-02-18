@@ -51,7 +51,7 @@ services:
       POSTGRES_USER: diabetes_user
       POSTGRES_PASSWORD: diabetes_pass
     deploy:
-      replicas: 3
+      replicas: 2
       restart_policy:
         condition: on-failure
       update_config:
