@@ -37,5 +37,5 @@ jobs:
         run: docker push fallmodo/diabete-frontend:latest
 
       - name: Deploy to Kubernetes
-        run: kubernetes apply -f k8s/
+        run: kubectl apply -f k8s/
           
