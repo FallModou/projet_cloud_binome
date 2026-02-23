@@ -7,7 +7,7 @@
 
 Ce projet présente le déploiement d’une application backend de prédiction du diabète dans une architecture Cloud Native multi-environnements.
 
-L’objectif est de mettre en œuvre et comparer :
+L’objectif est de mettre en œuvre :
 
 - Docker (conteneurisation simple)
 -  Docker Compose (orchestration locale multi-services)
@@ -15,7 +15,6 @@ L’objectif est de mettre en œuvre et comparer :
 -  Kubernetes (orchestration avancée multi-nœuds)
 -  CI/CD avec GitHub Actions
 
-Projet réalisé dans le cadre du Master Intelligence Artificielle & Smart Tech – Module Virtualisation & Cloud Computing.
 
 ---
 
