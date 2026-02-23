@@ -1,4 +1,4 @@
-# 🩺 Diabete Cloud Native Application  
+#  Diabete Cloud Native Application  
 ### Docker • Docker Compose • Docker Swarm • Kubernetes • CI/CD
 
 ---
@@ -18,16 +18,16 @@ L’objectif est de mettre en œuvre :
 
 ---
 
-# 🏗 Architecture
+#  Architecture
 
-## 🔹 Infrastructure Kubernetes
+##  Infrastructure Kubernetes
 
 - 1 Master Node
 - 2 Worker Nodes
 - Réseau: 192.168.x.x
 - Cluster initialisé avec kubeadm
 
-## 🔹 CI/CD
+##  CI/CD
 
 GitHub → Self-Hosted Runner (Master VM) → DockerHub → Kubernetes Cluster
 
